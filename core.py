@@ -35,7 +35,7 @@ class core:
         pp = data.get('photo',[])
         if type(pp)!=list: pp = [pp]
         for p in pp:
-            print(p)
+            # print(p)
             os.remove(p)
 
         pp = data.get('file', [])
@@ -43,8 +43,16 @@ class core:
         for p in pp:
             os.remove(p)
 
+        pp = data.get('file_thumb', [])
+        if type(pp) != list: pp = [pp]
+        for p in pp:
+            os.remove(p)
+
+        # print("sent_info = {}".format(sent_info))
+
         live_update = data.get('live_update',False)
         if live_update:
+            sent_info = sent_info if type(sent_info)==int else sent_info[0]
             if live_update==2:
                 self.db.live_update_update(mode="{};{}".format(data.get('command','sport'),sent_info),start=-1)
             self.db.live_update_update(mode="{};{}".format(data.get('command','sport'),sent_info))
@@ -55,6 +63,7 @@ class core:
             self.log_save(typ=5)
         else:
             self.log_save(mess=data.get('command',None),typ=1)
+
         self.db.close()
 
     def log_push(self,mess):
@@ -117,7 +126,13 @@ class core:
         if None in data.values():
             self.log_push(mess="None in values. data = {}".format(data))
             return {'mess': 'You did not put all information. Use /edit command','error':True}
-        return {'photo': createImage(data,typ=comm,delay=delay),'command':comm,'live_update':live_update}
+
+        now = (datetime.now() + timedelta(minutes=delay)).astimezone(timezone.utc)
+        now = now.replace(tzinfo=timezone(timedelta(hours=-1)))
+        fait = {'date': now.astimezone(timezone.utc).strftime("%d/%m/%Y"),
+                'time': now.astimezone(timezone.utc).strftime("%H:%M")}
+
+        return {'file': createImage(data,typ=comm,delay=delay,fait=fait), 'file_thumb':createThumb(typ=comm,fait=fait),'command':comm,'live_update':live_update} #
 
     def text(self,mess, messid=0):
         self.log_push(mess="TEXT. mess = {}".format(mess))
@@ -196,41 +211,49 @@ class core:
 
 
 pos = {
-    'name':(494,567),
-    'birthday':(494,660),
-    'placeofbirth':(1240,660),
-    'adress':(545,751),
-    'travail': (322,1025),
-    'achats': (322,1213),
-    'sante': (322,1445),
-    'famille': (322,1616),
-    'handicap': (322,1787),
-    'sport': (322,1947),
-    'convocation': (322,2208),
-    'missions': (322,2370),
-    'enfants': (322,2558),
-    'place': (450, 2740),
-    'date': (383, 2835),
-    'time': (1065, 2835)
+    'name':(450,720),
+    'birthday':(454,847),
+    'placeofbirth':(1000,847),
+    'adress':(535,976),
+    'travail': (244,1419),
+    'achats': (244,1713),
+    'sante': (244,2007),
+    'famille': (244,2097),
+    'handicap': (244,2237),
+    'sport': (244,2328),
+    'sport_animaux': (244,2328),
+    'convocation': (244,2618),
+    'missions': (244,2708),
+    'enfants': (244,2799),
+    'place': (396, 2950),
+    'date': (323, 3075),
+    'time': (1032, 3075)
 }
 
 def createImage(data,typ='sport',fait=None,delay=0):
     image = getImage(data,typ,fait,delay=delay)
-    name = ''.join([str(random.randint(0,9)) for i in range(10)])
-    path = 'export/{}.png'.format(name)
+    if fait:
+        name = "{}_{}_{}".format(fait['time'].replace(':','h'),fait['date'].replace('/','-'),''.join([str(random.randint(0,9)) for i in range(3)]))
+    else:
+        name = ''.join([str(random.randint(0,9)) for i in range(10)])
+
+    path = 'export/{}.pdf'.format(name)
     image.save(path, optimize=True, quality=95)
     return path
 
 def getImage(data, typ='sport', fait=None,delay=0):
+    if type(typ) == str: typ = [typ]
+    if 'sport' in typ: typ[typ.index('sport')]='sport_animaux'
     if fait == None:
         now = (datetime.now()+timedelta(minutes=delay)).astimezone(timezone.utc)
         now = now.replace(tzinfo=timezone(timedelta(hours=-1)))
         fait = {'date': now.astimezone(timezone.utc).strftime("%d/%m/%Y"),
-                'time': now.astimezone(timezone.utc).strftime("%Hh%M")}
+                'time': now.astimezone(timezone.utc).strftime("%H:%M")}
+
     name = data['name'].split(' ')
     qr_data = 'Cree le: {creationDate} a {creationHour};\nNom: {lastname};\nPrenom: {firstname};\nNaissance: {birthday} a {placeofbirth};\nAdresse: {adress};\nSortie: {datesortie} a {heuresortie};\nMotifs: {reasons};\n'.format(
         creationDate=fait['date'],
-        creationHour=fait['time'],
+        creationHour=fait['time'].replace(':','h'),
         lastname=' '.join([] if len(name)<2 else name[1:]),
         firstname=name[0],
         birthday=data['birthday'],
@@ -238,20 +261,19 @@ def getImage(data, typ='sport', fait=None,delay=0):
         adress=data['adress'],
         datesortie=fait['date'],
         heuresortie=fait['time'],
-        reasons="sport")
+        reasons=','.join(typ))
 
-    if type(typ) == str: typ = [typ]
 
     print(data)
 
-    image = Image.open('src/certificate.jpg')
+    image = Image.open('src/certificate.jpg').convert('RGB')
     qr_img = qrcode.make(qr_data)
-    qr_img = qr_img.resize((400, 400), Image.ANTIALIAS)
-    x0, y0 = 1820, 2690
+    qr_img = qr_img.resize((450, 450), Image.ANTIALIAS)
+    x0, y0 = 1815,3025
     image.paste(qr_img, (x0, y0, x0 + qr_img.size[0], y0 + qr_img.size[1]))
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype('Roboto-Regular.ttf', size=45)
-    font2 = ImageFont.truetype('Roboto-Regular.ttf', size=85)
+    font = ImageFont.truetype('Roboto-Regular.ttf', size=50)
+    font2 = ImageFont.truetype('Roboto-Regular.ttf', size=65)
     color = 'rgb(0, 0, 0)'
     for k in data.keys():
         print(pos[k],data[k])
@@ -262,3 +284,41 @@ def getImage(data, typ='sport', fait=None,delay=0):
         draw.text(pos[t], 'x', fill=color, font=font2)
 
     return image
+
+def createThumb(typ='sport',fait=None,delay=0):
+    image = getThumb(typ,fait,delay=delay)
+    if fait:
+        name = "{}_{}_{}".format(fait['time'].replace(':','h'),fait['date'].replace('/','-'),''.join([str(random.randint(0,9)) for i in range(3)]))
+    else:
+        name = ''.join([str(random.randint(0,9)) for i in range(10)])
+
+    path = 'export/t_{}.jpeg'.format(name)
+    image.save(path, optimize=True, quality=95)
+    return path
+
+def getThumb(typ='sport', fait=None,delay=0):
+    if type(typ) == str: typ = [typ]
+
+    if fait == None:
+        now = (datetime.now()+timedelta(minutes=delay)).astimezone(timezone.utc)
+        now = now.replace(tzinfo=timezone(timedelta(hours=-1)))
+        fait = {'date': now.astimezone(timezone.utc).strftime("%d/%m/%Y"),
+                'time': now.astimezone(timezone.utc).strftime("%H:%M")}
+
+    font3 = ImageFont.truetype('Roboto-Regular.ttf', size=50)
+    font4 = ImageFont.truetype('Roboto-Regular.ttf', size=120)
+    color = 'rgb(255, 255, 255)'
+
+    thumb = Image.new("RGB", (300, 300), (80, 80, 80))
+
+    draw = ImageDraw.Draw(thumb)
+    draw.text((80, 230), "Sport", fill=color, font=font3)
+
+    thumb = thumb.rotate(90)
+    draw = ImageDraw.Draw(thumb)
+    draw.text((13, 2), "{}h".format(fait['time'].split(":")[0]), fill=color, font=font4)
+    draw.text((80, 105), "{}".format(fait['time'].split(":")[1]), fill=color, font=font4)
+    draw.text((13, 230), fait['date'], fill=color, font=font3)
+
+    return thumb
+

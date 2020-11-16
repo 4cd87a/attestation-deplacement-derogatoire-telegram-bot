@@ -1,0 +1,13 @@
+FROM python:3
+
+RUN pip3 install pyTelegramBotAPI
+RUN pip3 install python-telegram-bot
+RUN pip3 install mysql-connector-python
+RUN pip3 install pillow
+RUN pip3 install qrcode
+
+
+WORKDIR /bot
+
+
+CMD [ "python3", "-u", "./bot.py" ]

@@ -8,10 +8,15 @@ import telebot
 import traceback
 
 from telebot import types
+
+import telegram
+
+
 from core import core
 import config
 
 bot = telebot.TeleBot(config.token)
+bot2 = telegram.Bot(token=config.token)
 
 print("Im in")
 
@@ -142,6 +147,8 @@ def repeat_all_messages(message): # Название функции не игр�
 
 
 def send(data=None,to=None, messId=None, disable_notification=False):
+    print('send')
+    print(data)
     if to==None: return False #to=me
     mess = data.get('mess',None)
     photo = data.get('photo',None)
@@ -156,68 +163,79 @@ def send(data=None,to=None, messId=None, disable_notification=False):
                 media = []
                 for i, p in enumerate(photo):
                     if i==0:
-                        media.append(types.InputMediaPhoto(open(p, 'rb'), caption=mess))
+                        media.append(telegram.InputMediaPhoto(open(p, 'rb'), caption=mess))
                     else:
-                        media.append(types.InputMediaPhoto(open(p, 'rb')))
+                        media.append(telegram.InputMediaPhoto(open(p, 'rb')))
 
-                out = bot.send_media_group(chat_id=to,media=media)
+                out = bot2.send_media_group(chat_id=to,media=media)
             else:
-                out = bot.send_photo(to, open(photo, 'rb'), caption=mess, disable_notification=disable_notification)
+                out = bot2.send_photo(to, open(photo, 'rb'), caption=mess, disable_notification=disable_notification)
         else:
             if type(photo) == list:
                 if type(messId)==list and len(photo)==len(messId):
                     for i, p in enumerate(photo):
                         if i==0:
-                            out = bot.edit_message_media(chat_id=to, message_id=messId[i],
-                                media=types.InputMediaPhoto(open(p, 'rb'), caption=mess))
+                            out = bot2.edit_message_media(chat_id=to, message_id=messId[i],
+                                media=telegram.InputMediaPhoto(open(p, 'rb'), caption=mess))
                         else:
-                            out = bot.edit_message_media(chat_id=to, message_id=messId[i],
-                                 media=types.InputMediaPhoto(open(p, 'rb')))
+                            out = bot2.edit_message_media(chat_id=to, message_id=messId[i],
+                                 media=telegram.InputMediaPhoto(open(p, 'rb')))
 
                 else:
                     print("if photo is list then messId should be also a list of the same size")
             else:
-                out = bot.edit_message_media(chat_id=to, message_id=messId,
-                                media=types.InputMediaPhoto(open(photo, 'rb'), caption=mess))
+                out = bot2.edit_message_media(chat_id=to, message_id=messId,
+                                media=telegram.InputMediaPhoto(open(photo, 'rb'), caption=mess))
 
     if file!=None:
         if messId == None:
             if type(file)==list:
                 media = []
                 for i, p in enumerate(file):
+                    file_thumb = None if data.get('file_thumb', None) is None else (None if (len(data.get('file_thumb'))<=i) else data.get('file_thumb')[i])
+                    if file_thumb: file_thumb = open(file_thumb, 'rb')
                     if i==0:
-                        media.append(types.InputMediaDocument(open(p, 'rb'), caption=mess))
+                        media.append(telegram.InputMediaDocument(open(p, 'rb'), caption=mess, thumb=file_thumb))
                     else:
-                        media.append(types.InputMediaDocument(open(p, 'rb')))
+                        media.append(telegram.InputMediaDocument(open(p, 'rb'), thumb=file_thumb))
 
-                out = bot.send_media_group(chat_id=to,media=media)
+                out = bot2.send_media_group(chat_id=to,media=media)
             else:
-                out = bot.send_document(to, open(file, 'rb'), caption=mess, disable_notification=disable_notification)
+                file_thumb = data.get('file_thumb', None)
+                if file_thumb: file_thumb = open(file_thumb, 'rb')
+                out = bot2.send_media_group(chat_id=to, media=[telegram.InputMediaDocument(open(p, 'rb'), caption=mess, thumb=file_thumb)],disable_notification=disable_notification)
+
         else:
             if type(file) == list:
                 if type(messId)==list and len(file)==len(messId):
                     for i, p in enumerate(file):
+                        file_thumb = None if data.get('file_thumb', None) is None else (
+                            None if (len(data.get('file_thumb')) <= i) else data.get('file_thumb')[i])
+                        if file_thumb: file_thumb = open(file_thumb, 'rb')
                         if i==0:
-                            out = bot.edit_message_media(chat_id=to, message_id=messId[i],
-                                media=types.InputMediaDocument(open(p, 'rb'), caption=mess))
+                            out = bot2.edit_message_media(chat_id=to, message_id=messId[i],
+                                media=telegram.InputMediaDocument(open(p, 'rb'), caption=mess, thumb=file_thumb))
                         else:
-                            out = bot.edit_message_media(chat_id=to, message_id=messId[i],
-                                 media=types.InputMediaDocument(open(p, 'rb')))
+                            out = bot2.edit_message_media(chat_id=to, message_id=messId[i],
+                                 media=telegram.InputMediaDocument(open(p, 'rb'), thumb=file_thumb))
 
                 else:
                     print("if photo is list then messId should be also a list of the same size")
             else:
-                out = bot.edit_message_media(chat_id=to, message_id=messId,
-                                media=types.InputMediaDocument(open(file, 'rb'), caption=mess))
+                file_thumb = data.get('file_thumb', None)
+                print("file_thumb = {}".format(file_thumb))
+                if file_thumb: file_thumb = open(file_thumb, 'rb')
+                out = bot2.edit_message_media(chat_id=to, message_id=messId,
+                                              media=telegram.InputMediaDocument(open(file, 'rb'), caption=mess, thumb=file_thumb))
 
 
     elif mess!=None:
         if messId==None:
-            out = bot.send_message(to,mess, disable_notification=disable_notification)
+            out = bot2.send_message(to,mess, disable_notification=disable_notification)
         else:
             #print(mess,to,messId)
-            out = bot.edit_message_text(text=mess,chat_id=to,message_id=messId)
-    #print(out)
+            out = bot2.edit_message_text(text=mess,chat_id=to,message_id=messId)
+    print("out = {}".format(out))
     if type(out)==list:
         return [o.message_id for o in out]
 

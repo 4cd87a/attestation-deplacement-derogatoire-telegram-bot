@@ -187,7 +187,7 @@ class SQLighter:
         return None
 
 
-    def live_update_list(self,delta=1200,active_duration=10800):
+    def live_update_list(self,delta=1200,active_duration=10800): #1200
         timenow = time.time()
         like = "WHERE `live_update_start`>'{}' AND `live_update_last`<'{}' ORDER BY `live_update_last`".format(round(timenow - active_duration),round(timenow - delta))
         return self.getFromTable('users', ['id', 'telid', 'live_update_start', 'live_update_last', 'live_update_mode'], like)
