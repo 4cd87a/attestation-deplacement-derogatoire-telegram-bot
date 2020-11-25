@@ -175,7 +175,7 @@ class core:
                 return {'mess':'Not right format of address','error':True}
             self.db.user_update(adress=mess)
             self.db.user_set_mode(mode=5)
-            return {'mess':'The last one. Write the place where you usually make this declaration'}
+            return {'mess':'The last one. Write the place where you usually make this declaration. Example:\nPalaiseau'}
 
         if mode==5:
             if re.match('^([0-9a-zA-ZÀ-ÿ\-\,\. ]+)$',mess) is None:
@@ -312,7 +312,7 @@ def getThumb(typ='sport', fait=None,delay=0):
     thumb = Image.new("RGB", (300, 300), (80, 80, 80))
 
     draw = ImageDraw.Draw(thumb)
-    draw.text((80, 230), "Sport", fill=color, font=font3)
+    draw.text((80, 230), ','.join([t[0].upper() + t[1:] for t in typ]), fill=color, font=font3)
 
     thumb = thumb.rotate(90)
     draw = ImageDraw.Draw(thumb)
@@ -321,4 +321,3 @@ def getThumb(typ='sport', fait=None,delay=0):
     draw.text((13, 230), fait['date'], fill=color, font=font3)
 
     return thumb
-

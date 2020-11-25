@@ -203,7 +203,7 @@ def send(data=None,to=None, messId=None, disable_notification=False):
             else:
                 file_thumb = data.get('file_thumb', None)
                 if file_thumb: file_thumb = open(file_thumb, 'rb')
-                out = bot2.send_media_group(chat_id=to, media=[telegram.InputMediaDocument(open(p, 'rb'), caption=mess, thumb=file_thumb)],disable_notification=disable_notification)
+                out = bot2.send_media_group(chat_id=to, media=[telegram.InputMediaDocument(open(file, 'rb'), caption=mess, thumb=file_thumb)],disable_notification=disable_notification)
 
         else:
             if type(file) == list:
