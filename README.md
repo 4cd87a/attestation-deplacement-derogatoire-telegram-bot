@@ -3,6 +3,10 @@ Python bot for telegram which creates attestation de deplacement derogatoire.
 
 **Telegram bot at *@deplacement_bot***
 
+Here how it looks like:
+
+![Screenshot](screenshot.png)
+
 
 # Info
 
