@@ -100,7 +100,21 @@ def handle_edit(message):
         cor = core(message.from_user.id)
         users, data = cor.toall(message.text, message.message_id)
         for user in users:
-            sent_info = send(data=data, to=user)
+            try:
+                sent_info = send(data=data, to=user)
+            except Exception as e:
+                print("Error: ".format(e))
+                with open('log.txt', 'a') as f:
+                    f.write('---------- {} {} ----------'.format(int(time.time()),
+                                                                 datetime.now().strftime("%m/%d/%Y, %H:%M:%S")))
+                    f.write("{}\n".format(cor.logs))
+                    f.write(str(e))
+                    f.write(traceback.format_exc())
+
+                bot.reply_to(message, "{}\nto:{}\nmess: {}".format(e,user,data))
+                if config.metelid!=message.from_user.id:
+                    bot.send_message(config.metelid, e, disable_notification=False)
+                cor.log_save(typ=4)
 
         cor.close(data=data, sent_info=sent_info,mode='toall')
 

@@ -80,7 +80,7 @@ class core:
 
     def detect_command(self,mess,verify=True):
         if verify: reg = re.match('^(\/[a-z]+)( ([0-9a-zA-ZÀ-ÿ\-\, ]+))?$',mess)
-        else: reg = re.match('^(\/[a-z]+)( ([0-9a-zA-ZÀ-ÿ\-\/\n\'\,\.\:\; ]+))?$',mess)
+        else: reg = re.match('^(\/[a-z]+)( ([0-9a-zA-ZÀ-ÿ\-\/\n\'\,\.\:\;\(\) ]+))?$',mess)
         if reg is None: return None
         reg = reg.groups()
         comm = reg[0][1:]
@@ -211,23 +211,23 @@ class core:
 
 
 pos = {
-    'name':(450,720),
-    'birthday':(454,847),
-    'placeofbirth':(1000,847),
-    'adress':(535,976),
-    'travail': (244,1419),
-    'achats': (244,1713),
-    'sante': (244,2007),
-    'famille': (244,2097),
-    'handicap': (244,2237),
-    'sport': (244,2328),
-    'sport_animaux': (244,2328),
-    'convocation': (244,2618),
-    'missions': (244,2708),
-    'enfants': (244,2799),
-    'place': (396, 2950),
-    'date': (323, 3075),
-    'time': (1032, 3075)
+    'name':(450,732),
+    'birthday':(454,859),
+    'placeofbirth':(1000,859),
+    'adress':(535,986),
+    'travail': (244,1419), #1
+    'achats': (244,1713), #2
+    'sante': (244,1903), #3
+    'famille': (244,1993), #4
+    'handicap': (244,2134), #5
+    'sport': (244,2224), #6
+    'sport_animaux': (244,2224), #6
+    'convocation': (244,2564), #7
+    'missions': (244,2705), #8
+    'enfants': (244,2795), #9
+    'place': (396, 3158),
+    'date': (327, 3286),
+    'time': (1032, 3286)
 }
 
 def createImage(data,typ='sport',fait=None,delay=0):
@@ -267,10 +267,20 @@ def getImage(data, typ='sport', fait=None,delay=0):
     print(data)
 
     image = Image.open('src/certificate.jpg').convert('RGB')
-    qr_img = qrcode.make(qr_data)
-    qr_img = qr_img.resize((450, 450), Image.ANTIALIAS)
-    x0, y0 = 1815,3025
+
+    x0, y0, z0 = 1735, 2900, 550
+
+    qr = qrcode.QRCode()
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="rgb(0, 0, 0)", back_color="white").resize((z0, z0), Image.ANTIALIAS)
+    # qr_img1 = qr.make_image(fill_color="rgb(0, 0, 100)", back_color="white").resize((z0,z0),Image.ANTIALIAS).crop((0, 0, int(z0/2), z0))
+    # qr_img2 = qr.make_image(fill_color="rgb(100, 0, 0)", back_color="white").resize((z0,z0),Image.ANTIALIAS).crop((int(z0)/2, 0, z0, z0))
+
     image.paste(qr_img, (x0, y0, x0 + qr_img.size[0], y0 + qr_img.size[1]))
+    # image.paste(qr_img1,(x0,y0,x0+qr_img1.size[0],y0+qr_img1.size[1]))
+    # image.paste(qr_img2,(x0+qr_img1.size[0],y0,x0+qr_img1.size[0]+qr_img2.size[0],y0+qr_img2.size[1]))
+
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype('Roboto-Regular.ttf', size=50)
     font2 = ImageFont.truetype('Roboto-Regular.ttf', size=65)

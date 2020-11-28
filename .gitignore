@@ -1,0 +1,14 @@
+
+.idea/
+
+__pycache__/
+
+export/
+
+media/
+
+pdf/
+
+config.py
+
+log.txt
